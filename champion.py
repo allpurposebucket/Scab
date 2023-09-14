@@ -6,5 +6,5 @@ class Champion:
         self.champion_name = champion_id_to_name(champion_id)
 
 if __name__ == "__main__":
-    champ = Champion(21)
+    champ = Champion(27)
     print(champ.champion_name)

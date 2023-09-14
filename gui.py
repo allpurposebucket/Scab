@@ -26,12 +26,23 @@ def Settings():
 def About():
     print("About function")
 
+def Search():
+    print("Search function")
+
 def button_callback(function):
     function()
 
 app = customtkinter.CTk()
 app.title("Scab Summoner Stats")
 app.geometry(f"{1100}x{580}")
+
+sum_var = customtkinter.StringVar()
+SearchBar = Frame(app, width=50, height=20)
+SearchBar.pack(side=RIGHT)
+entry = customtkinter.CTkEntry(SearchBar, textvariable=sum_var, bg_color='red', corner_radius=0)
+entry.pack(side=LEFT)
+submit = customtkinter.CTkButton(SearchBar, text="Submit", command=partial(button_callback, Search))
+submit.pack(side=RIGHT)
 
 NavBar = Frame(app, bg="black", width=200, height=480)
 NavBar.pack(side=TOP)
