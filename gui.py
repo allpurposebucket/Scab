@@ -3,77 +3,112 @@ from PIL import ImageTk, Image
 import customtkinter
 from functools import partial
 from summoner import Summoner
+from match import Match
 from api import get_champion_splash_art
+import threading
 
-def Home():
-    print("Home!!")
+class SummonerGUI:
+    def __init__(self):
+        self.app = customtkinter.CTk()
+        self.app.title("Scab Summoner Stats")
+        self.app.geometry(f"{1100}x{580}")
 
-def Champions():
-    print("Champions function")
+        self.sum_var = customtkinter.StringVar()
+        self.SearchBar = Frame(self.app, width=50, height=20)
+        self.SearchBar.pack(side=RIGHT)
+        self.entry = customtkinter.CTkEntry(self.SearchBar, textvariable=self.sum_var, bg_color='red', corner_radius=0)
+        self.entry.pack(side=LEFT)
+        self.submit = customtkinter.CTkButton(self.SearchBar, text="Submit", command=self.search_summoner)
+        self.submit.pack(side=RIGHT)
 
-def Items():
-    print("Items function")
+        self.NavBar = Frame(self.app, bg="black", width=200, height=480)
+        self.NavBar.pack(side=TOP)
 
-def Runes():
-    print("Runes function")
+        self.button_data = [
+            ("Home", self.Home),
+            ("Champions", self.Champions),
+            ("Items", self.Items),
+            ("Runes", self.Runes),
+            ("Summoner Spells", self.SummonerSpells),
+            ("Settings", self.Settings),
+            ("About", self.About)
+        ]
 
-def SummonerSpells():
-    print("Summoner Spells function")
+        self.button_list = []
 
-def Settings():
-    print("Settings function")
+        for button_name, button_function in self.button_data:
+            button = Button(self.NavBar, text=button_name, bg="black", fg="white", width=20, height=2, command=partial(self.button_callback, button_function))
+            self.button_list.append(button)
+            button.pack(side=LEFT, pady=5)
 
-def About():
-    print("About function")
+        self.SummonerInfo = Frame(self.app, width=900, height=480)
+        self.SummonerInfo.pack(side=TOP)
 
-def Search():
-    print("Search function")
+        self.SummonerName = Label(self.SummonerInfo, text="", font=("Arial", 20))
+        self.SummonerName.pack(side=TOP)
 
-def button_callback(function):
-    function()
+        self.GameList = Listbox(self.SummonerInfo, width=40, height=10)
+        self.GameList.pack(side=TOP)
 
-app = customtkinter.CTk()
-app.title("Scab Summoner Stats")
-app.geometry(f"{1100}x{580}")
+    def search_summoner(self):
+        summoner_name = self.sum_var.get()
+        t = threading.Thread(target=fill_with_summoner, args=(self, summoner_name))
+        t.start()
 
-sum_var = customtkinter.StringVar()
-SearchBar = Frame(app, width=50, height=20)
-SearchBar.pack(side=RIGHT)
-entry = customtkinter.CTkEntry(SearchBar, textvariable=sum_var, bg_color='red', corner_radius=0)
-entry.pack(side=LEFT)
-submit = customtkinter.CTkButton(SearchBar, text="Submit", command=partial(button_callback, Search))
-submit.pack(side=RIGHT)
+    def Home(self):
+        print("Home!!")
 
-NavBar = Frame(app, bg="black", width=200, height=480)
-NavBar.pack(side=TOP)
+    def Champions(self):
+        print("Champions function")
 
-button_data = [
-    ("Home", Home),
-    ("Champions", Champions),
-    ("Items", Items),
-    ("Runes", Runes),
-    ("Summoner Spells", SummonerSpells),
-    ("Settings", Settings),
-    ("About", About)
-]
+    def Items(self):
+        print("Items function")
 
-button_list = []
+    def Runes(self):
+        print("Runes function")
 
-for button_name, button_function in button_data:
-    button = Button(NavBar, text=button_name, bg="black", fg="white", width=20, height=2, command=partial(button_callback, button_function))
-    button_list.append(button)
-    button.pack(side=LEFT, pady=5)
+    def SummonerSpells(self):
+        print("Summoner Spells function")
 
-summoner = Summoner("allpurposebucket")
-highest_mastery = list(summoner.masteries.keys())[0]
-get_champion_splash_art(highest_mastery)
-bg = ImageTk.PhotoImage(Image.open(f"assets/{highest_mastery}.jpg"))
+    def Settings(self):
+        print("Settings function")
 
-SummonerInfo = Frame(app, width=900, height=480)
-SummonerInfo.pack(side=TOP)
+    def About(self):
+        print("About function")
 
-SummonerName = Label(SummonerInfo, text=summoner.summoner_name, image=bg, font=("Arial", 20))
-SummonerName.pack(side=TOP)
+    def button_callback(self, function):
+        function()
+
+def fill_with_summoner(gui, summoner_name):
+    try:
+        summoner = Summoner(summoner_name)
+        highest_mastery = list(summoner.masteries.keys())[0]
+        mastery_image_path = f"assets/{highest_mastery}.jpg"
+
+        # Open the image
+        mastery_image = Image.open(mastery_image_path)
+        # Resize the image if necessary
+        mastery_image = mastery_image.resize((1215, 717), Image.LANCZOS)  # Adjust width and height as needed
+        # Convert to ImageTk.PhotoImage
+        bg = ImageTk.PhotoImage(mastery_image)
+
+        gui.SummonerName.config(text=summoner.summoner_name, image=bg)
+        gui.SummonerName.image = bg  # Keep a reference to the image
+
+        gui.GameList.delete(0, END)
+
+        match_ids = summoner.matches[:5]
+        for match_id in match_ids:
+            match = Match(match_id)
+            for summoner in match.summoners:
+                game_entry = f"Summoner Name: {summoner.summoner_name}"
+                gui.GameList.insert(END, game_entry)
+
+    except Exception as e:
+        print(e)
+        print("Summoner fill failed")
 
 
-app.mainloop()
+if __name__ == "__main__":
+    summoner_gui = SummonerGUI()
+    summoner_gui.app.mainloop()

@@ -20,7 +20,7 @@ class Summoner:
             self.summoner_level = summoner_data["summonerLevel"]
         except Exception as e:
             print(e)
-            print("Summoner not found")
+            print("Summoner not found: " + self.summoner_name)
 
     def load_masteries(self):
         try:

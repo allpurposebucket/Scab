@@ -12,7 +12,6 @@ class Match:
         match = get_match(self.matchId)
         for participant in match['metadata']['participants']:
             summoner = Summoner(puuid=participant)
-            print(summoner.masteries)
             self.summoners.append(summoner)
 
 if __name__ == '__main__':
